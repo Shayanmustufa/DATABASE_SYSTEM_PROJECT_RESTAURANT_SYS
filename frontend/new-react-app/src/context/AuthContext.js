@@ -1,4 +1,5 @@
 // frontend/new-react-app/src/context/AuthContext.js
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
@@ -14,21 +15,19 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [userType, setUserType] = useState(null); // 'customer' or 'staff'
   const [loading, setLoading] = useState(true);
-  const [isStaff, setIsStaff] = useState(false);
 
   // Check if user is logged in on mount
   useEffect(() => {
     const token = localStorage.getItem('access_token');
-    const userType = localStorage.getItem('user_type');
+    const savedUserType = localStorage.getItem('user_type');
     const userData = localStorage.getItem('user_data');
     
     if (token) {
-      // Set axios default header
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setIsStaff(userType === 'staff');
+      setUserType(savedUserType);
       
-      // Set user data if available
       if (userData) {
         try {
           setUser(JSON.parse(userData));
@@ -40,9 +39,9 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (username, password, type = 'customer') => {
+  // CUSTOMER LOGIN
+  const loginCustomer = async (username, password) => {
     try {
-      // Get JWT tokens
       const response = await axios.post('http://127.0.0.1:8000/api/token/', {
         username,
         password,
@@ -50,35 +49,61 @@ export const AuthProvider = ({ children }) => {
 
       const { access, refresh } = response.data;
       
-      // Store tokens
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
-      localStorage.setItem('user_type', type);
+      localStorage.setItem('user_type', 'customer');
       
-      // Set axios default header
       axios.defaults.headers.common['Authorization'] = `Bearer ${access}`;
       
-      // Fetch user details
       try {
         const userResponse = await axios.get('http://127.0.0.1:8000/api/me/');
         const userData = userResponse.data;
-        
         setUser(userData);
         localStorage.setItem('user_data', JSON.stringify(userData));
       } catch (error) {
         console.error('Error fetching user data:', error);
-        // Still allow login even if user data fetch fails
         setUser({ username });
       }
       
-      setIsStaff(type === 'staff');
-      
+      setUserType('customer');
       return { success: true };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Customer login error:', error);
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'Login failed. Please check your credentials.' 
+        error: error.response?.data?.detail || 'Login failed' 
+      };
+    }
+  };
+
+  // STAFF LOGIN (NEW)
+  const loginStaff = async (email, password) => {
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/api/staff/login/', {
+        email,
+        password,
+      });
+
+      if (response.data.success) {
+        const { access_token, refresh_token, staff } = response.data;
+        
+        localStorage.setItem('access_token', access_token);
+        localStorage.setItem('refresh_token', refresh_token);
+        localStorage.setItem('user_type', 'staff');
+        localStorage.setItem('user_data', JSON.stringify(staff));
+        
+        axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+        
+        setUser(staff);
+        setUserType('staff');
+        
+        return { success: true };
+      }
+    } catch (error) {
+      console.error('Staff login error:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Staff login failed' 
       };
     }
   };
@@ -90,7 +115,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user_data');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
-    setIsStaff(false);
+    setUserType(null);
   };
 
   const register = async (userData) => {
@@ -98,34 +123,27 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post('http://127.0.0.1:8000/api/register/', userData);
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Registration error:', error);
-      
-      // Handle different error formats
-      let errorMessage = 'Registration failed. Please try again.';
-      
+      let errorMessage = 'Registration failed';
       if (error.response?.data?.error) {
-        if (Array.isArray(error.response.data.error)) {
-          errorMessage = error.response.data.error.join(' ');
-        } else {
-          errorMessage = error.response.data.error;
-        }
+        errorMessage = Array.isArray(error.response.data.error) 
+          ? error.response.data.error.join(' ')
+          : error.response.data.error;
       }
-      
-      return { 
-        success: false, 
-        error: errorMessage
-      };
+      return { success: false, error: errorMessage };
     }
   };
 
   const value = {
     user,
-    isStaff,
+    userType,
     loading,
-    login,
+    loginCustomer,
+    loginStaff,      // NEW
     logout,
     register,
     isAuthenticated: !!user || !!localStorage.getItem('access_token'),
+    isStaff: userType === 'staff',      // NEW
+    isCustomer: userType === 'customer', // NEW
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

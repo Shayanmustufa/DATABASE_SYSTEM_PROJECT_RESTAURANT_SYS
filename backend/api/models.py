@@ -261,9 +261,15 @@ class OrderCustomer(models.Model):
 # -------------------------
 # 21. ORDER STAFF (Composite Key)
 # -------------------------
-class OrderStaff(models.Model):
-    OrderID = models.ForeignKey(Order, on_delete=models.CASCADE)
-    StaffID = models.ForeignKey(Staff, on_delete=models.CASCADE)
+# backend/api/models.py - Add to Staff model
 
-    class Meta:
-        unique_together = ('OrderID', 'StaffID')
+class Staff(models.Model):
+    StaffID = models.AutoField(primary_key=True)
+    Name = models.CharField(max_length=100)
+    Role = models.CharField(max_length=50)
+    Salary = models.DecimalField(max_digits=10, decimal_places=2)
+    Email = models.EmailField(unique=True, default='staff@example.com')  # ADD THIS
+    Password = models.CharField(max_length=255, default='hashed_password')  # ADD THIS
+    
+    def __str__(self):
+        return self.Name
