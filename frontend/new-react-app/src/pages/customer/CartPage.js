@@ -1,3 +1,4 @@
+// frontend/new-react-app/src/pages/customer/CartPage.js
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
@@ -14,13 +15,12 @@ const CartPage = () => {
       alert('Please login to place an order');
       navigate('/login');
     } else {
-      // Navigate to checkout
       navigate('/checkout');
     }
   };
 
   const calculateTax = () => {
-    return getCartTotal() * 0.1; // 10% tax
+    return getCartTotal() * 0.18; // 10% tax
   };
 
   const calculateTotal = () => {
@@ -127,7 +127,7 @@ const CartPage = () => {
             </div>
 
             <div className="summary-row">
-              <span>Tax (10%):</span>
+              <span>Tax (18%):</span>
               <span>${calculateTax().toFixed(2)}</span>
             </div>
 

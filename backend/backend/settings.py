@@ -197,3 +197,28 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
+
+# Add this to backend/backend/settings.py at the bottom
+
+# ========================================
+# EMAIL CONFIGURATION
+# ========================================
+
+# Email Backend Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # For Gmail
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'  # Replace with your email
+EMAIL_HOST_PASSWORD = 'your-app-password'  # Replace with app password
+
+# For development/testing, you can use console backend (prints to console)
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+DEFAULT_FROM_EMAIL = 'Restaurant System <your-email@gmail.com>'
+SERVER_EMAIL = 'your-email@gmail.com'
+
+# Restaurant Info for Emails
+RESTAURANT_NAME = "ROYALS Restaurant"
+RESTAURANT_PHONE = "+1234567890"
+RESTAURANT_ADDRESS = "main Shahrah-e-Faisal, Karachi, Pakistan"

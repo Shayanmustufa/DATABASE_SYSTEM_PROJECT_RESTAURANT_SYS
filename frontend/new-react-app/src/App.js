@@ -1,3 +1,4 @@
+// frontend/new-react-app/src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -8,8 +9,14 @@ import CustomerNavbar from './components/customer/CustomerNavbar';
 import HomePage from './pages/customer/HomePage';
 import MenuPage from './pages/customer/MenuPage';
 import CartPage from './pages/customer/CartPage';
-// Staff Components (your existing pages)
-import StaffNavbar from './components/Navbar'; // Rename this later to StaffNavbar
+import LoginPage from './pages/customer/LoginPage';
+import SignupPage from './pages/customer/SignupPage';
+import CheckoutPage from './pages/customer/CheckoutPage';
+import OrderSuccessPage from './pages/customer/OrderSuccessPage';
+import MyOrdersPage from './pages/customer/MyOrdersPage';
+
+// Staff Components
+import StaffNavbar from './components/Navbar';
 import Dashboard from './components/pages/Dashboard';
 import Customers from './components/pages/Customers';
 import MenuItems from './components/pages/MenuItems';
@@ -57,11 +64,13 @@ function App() {
               <Route path="/" element={<CustomerLayout><HomePage /></CustomerLayout>} />
               <Route path="/menu" element={<CustomerLayout><MenuPage /></CustomerLayout>} />
               <Route path="/cart" element={<CustomerLayout><CartPage /></CustomerLayout>} />
+              <Route path="/checkout" element={<CustomerLayout><CheckoutPage /></CustomerLayout>} />
+              <Route path="/order-success" element={<CustomerLayout><OrderSuccessPage /></CustomerLayout>} />
+              <Route path="/login" element={<CustomerLayout><LoginPage /></CustomerLayout>} />
+              <Route path="/signup" element={<CustomerLayout><SignupPage /></CustomerLayout>} />
               <Route path="/reservations" element={<CustomerLayout><div><h1>Reservations - Coming Soon</h1></div></CustomerLayout>} />
               <Route path="/challenges" element={<CustomerLayout><div><h1>Challenges - Coming Soon</h1></div></CustomerLayout>} />
-              <Route path="/my-orders" element={<CustomerLayout><div><h1>My Orders - Coming Soon</h1></div></CustomerLayout>} />
-              <Route path="/login" element={<CustomerLayout><div><h1>Login Page - Coming Soon</h1></div></CustomerLayout>} />
-              <Route path="/signup" element={<CustomerLayout><div><h1>Signup Page - Coming Soon</h1></div></CustomerLayout>} />
+              <Route path="/my-orders" element={<CustomerLayout><MyOrdersPage /></CustomerLayout>} />
 
               {/* ==================== STAFF ROUTES ==================== */}
               <Route path="/staff" element={<StaffLayout><Dashboard /></StaffLayout>} />
