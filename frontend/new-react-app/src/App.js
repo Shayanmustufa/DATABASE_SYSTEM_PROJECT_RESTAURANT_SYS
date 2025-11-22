@@ -1,4 +1,7 @@
-// frontend/new-react-app/src/App.js
+/ FILE 1: Fix App.js
+// Location: frontend/new-react-app/src/App.js
+// ========================================
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
