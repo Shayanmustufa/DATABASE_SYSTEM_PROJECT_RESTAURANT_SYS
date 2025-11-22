@@ -209,14 +209,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # For Gmail
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@gmail.com'  # Replace with your email
-EMAIL_HOST_PASSWORD = 'your-app-password'  # Replace with app password
+EMAIL_HOST_USER = 'shayan710rm@gmail.com'  # Replace with your email
+EMAIL_HOST_PASSWORD = 'zkvqqktdwovjogsv'  # Replace with app password
 
 # For development/testing, you can use console backend (prints to console)
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-DEFAULT_FROM_EMAIL = 'Restaurant System <your-email@gmail.com>'
-SERVER_EMAIL = 'your-email@gmail.com'
+DEFAULT_FROM_EMAIL = 'Restaurant System <shayan710rm@gmail.com>'
+SERVER_EMAIL = 'shayan710rm@gmail.com'
 
 # Restaurant Info for Emails
 RESTAURANT_NAME = "ROYALS Restaurant"

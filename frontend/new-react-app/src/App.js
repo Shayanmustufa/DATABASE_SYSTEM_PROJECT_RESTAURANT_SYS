@@ -14,6 +14,8 @@ import SignupPage from './pages/customer/SignupPage';
 import CheckoutPage from './pages/customer/CheckoutPage';
 import OrderSuccessPage from './pages/customer/OrderSuccessPage';
 import MyOrdersPage from './pages/customer/MyOrdersPage';
+import ReservationPage from './pages/customer/ReservationPage';
+import MyReservationsPage from './pages/customer/MyReservationsPage';
 
 // Staff Components
 import StaffNavbar from './components/Navbar';
@@ -68,7 +70,8 @@ function App() {
               <Route path="/order-success" element={<CustomerLayout><OrderSuccessPage /></CustomerLayout>} />
               <Route path="/login" element={<CustomerLayout><LoginPage /></CustomerLayout>} />
               <Route path="/signup" element={<CustomerLayout><SignupPage /></CustomerLayout>} />
-              <Route path="/reservations" element={<CustomerLayout><div><h1>Reservations - Coming Soon</h1></div></CustomerLayout>} />
+              <Route path="/reservations" element={<CustomerLayout><ReservationPage /></CustomerLayout>} />
+              <Route path="/my-reservations" element={<CustomerLayout><MyReservationsPage /></CustomerLayout>} />
               <Route path="/challenges" element={<CustomerLayout><div><h1>Challenges - Coming Soon</h1></div></CustomerLayout>} />
               <Route path="/my-orders" element={<CustomerLayout><MyOrdersPage /></CustomerLayout>} />
 

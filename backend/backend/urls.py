@@ -7,6 +7,13 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from api.auth_views import register_customer, get_current_user
+from api.reservation_views import (
+    create_reservation,
+    get_my_reservations,
+    cancel_reservation,
+    get_available_tables,
+    get_available_time_slots
+)
 
 # Simple home view
 def home(request):
@@ -29,8 +36,13 @@ def home(request):
     })
 
 urlpatterns = [
+    # Home endpoint
     path('', home, name='home'),
+    
+    # Admin
     path('admin/', admin.site.urls),
+    
+    # API endpoints (from api/urls.py - all the viewsets)
     path('api/', include('api.urls')),
     
     # JWT Authentication endpoints
@@ -40,20 +52,6 @@ urlpatterns = [
     # Custom auth endpoints
     path('api/register/', register_customer, name='register'),
     path('api/me/', get_current_user, name='current_user'),
-]
-
-# Add these imports to backend/backend/urls.py
-from api.reservation_views import (
-    create_reservation,
-    get_my_reservations,
-    cancel_reservation,
-    get_available_tables,
-    get_available_time_slots
-)
-
-# Add these to urlpatterns in backend/backend/urls.py
-urlpatterns = [
-    # ... existing patterns ...
     
     # Reservation endpoints
     path('api/reservations/create/', create_reservation, name='create_reservation'),

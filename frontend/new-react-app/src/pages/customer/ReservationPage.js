@@ -9,7 +9,7 @@ const ReservationPage = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(1); // 1: Date/Time, 2: Table, 3: Confirm
+  const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [numPeople, setNumPeople] = useState(2);
@@ -26,57 +26,87 @@ const ReservationPage = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Get min date (today)
   const getMinDate = () => {
     const today = new Date();
     return today.toISOString().split('T')[0];
   };
 
-  // Get max date (3 months from now)
   const getMaxDate = () => {
     const maxDate = new Date();
     maxDate.setMonth(maxDate.getMonth() + 3);
     return maxDate.toISOString().split('T')[0];
   };
 
-  // Fetch available time slots when date is selected
   const handleDateChange = async (date) => {
+    console.log('🔍 Selected date:', date);
     setSelectedDate(date);
     setSelectedTime('');
     setAvailableTables([]);
     setSelectedTable(null);
+    setError('');
     
-    if (!date) return;
+    if (!date) {
+      setAvailableTimeSlots([]);
+      return;
+    }
 
+    setLoading(true);
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/api/reservations/time-slots/?date=${date}`
-      );
-      setAvailableTimeSlots(response.data.time_slots);
+      const url = `http://127.0.0.1:8000/api/reservations/time-slots/?date=${date}`;
+      console.log('📡 Fetching time slots from:', url);
+      
+      const response = await axios.get(url);
+      console.log('✅ Time slots response:', response.data);
+      
+      if (response.data.success) {
+        setAvailableTimeSlots(response.data.time_slots);
+        
+        if (response.data.time_slots.length === 0) {
+          setError('No time slots available for this date. Please select another date.');
+        }
+      } else {
+        setError('Failed to load time slots');
+      }
     } catch (err) {
-      console.error('Error fetching time slots:', err);
-      setError('Failed to load time slots');
+      console.error('❌ Error fetching time slots:', err);
+      console.error('Error details:', err.response?.data);
+      setError(err.response?.data?.error || 'Failed to load time slots. Make sure the backend server is running.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fetch available tables when time is selected
   const handleTimeChange = async (time) => {
+    console.log('🔍 Selected time:', time);
     setSelectedTime(time);
     setAvailableTables([]);
     setSelectedTable(null);
+    setError('');
     
     if (!selectedDate || !time) return;
 
     setLoading(true);
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/api/reservations/available-tables/?date=${selectedDate}&time=${time}`
-      );
-      setAvailableTables(response.data.available_tables);
-      setLoading(false);
+      const url = `http://127.0.0.1:8000/api/reservations/available-tables/?date=${selectedDate}&time=${time}`;
+      console.log('📡 Fetching available tables from:', url);
+      
+      const response = await axios.get(url);
+      console.log('✅ Available tables response:', response.data);
+      
+      if (response.data.success) {
+        setAvailableTables(response.data.available_tables);
+        
+        if (response.data.available_tables.length === 0) {
+          setError('No tables available at this time. Please select a different time.');
+        }
+      } else {
+        setError('Failed to load available tables');
+      }
     } catch (err) {
-      console.error('Error fetching tables:', err);
-      setError('Failed to load available tables');
+      console.error('❌ Error fetching tables:', err);
+      console.error('Error details:', err.response?.data);
+      setError(err.response?.data?.error || 'Failed to load available tables');
+    } finally {
       setLoading(false);
     }
   };
@@ -85,8 +115,12 @@ const ReservationPage = () => {
     setError('');
     
     if (step === 1) {
-      if (!selectedDate || !selectedTime) {
-        setError('Please select date and time');
+      if (!selectedDate) {
+        setError('Please select a date');
+        return;
+      }
+      if (!selectedTime) {
+        setError('Please select a time');
         return;
       }
       if (numPeople < 1 || numPeople > 20) {
@@ -105,6 +139,7 @@ const ReservationPage = () => {
 
   const handlePrevStep = () => {
     setError('');
+    setSuccess('');
     if (step > 1) {
       setStep(step - 1);
     }
@@ -113,19 +148,31 @@ const ReservationPage = () => {
   const handleConfirmReservation = async () => {
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        setError('Please log in to make a reservation');
+        navigate('/login');
+        return;
+      }
+
       const reservationDateTime = `${selectedDate}T${selectedTime}:00`;
+
+      const reservationData = {
+        ReservationDateTime: reservationDateTime,
+        NumPeople: parseInt(numPeople),
+        TableNumber: parseInt(selectedTable),
+        CustomerID: user.customerId
+      };
+
+      console.log('📡 Sending reservation:', reservationData);
 
       const response = await axios.post(
         'http://127.0.0.1:8000/api/reservations/create/',
-        {
-          ReservationDateTime: reservationDateTime,
-          NumPeople: numPeople,
-          TableNumber: selectedTable,
-          CustomerID: user.customerId
-        },
+        reservationData,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -134,21 +181,42 @@ const ReservationPage = () => {
         }
       );
 
+      console.log('✅ Reservation response:', response.data);
+
       if (response.data.success) {
-        setSuccess('Reservation confirmed! Check your email for details.');
+        setSuccess(
+          '🎉 Reservation confirmed successfully! ' + 
+          (response.data.email_sent ? 'Check your email for confirmation details.' : '')
+        );
         
-        // Redirect after 3 seconds
         setTimeout(() => {
           navigate('/my-reservations');
-        }, 3000);
+        }, 2000);
+      } else {
+        setError(response.data.error || 'Failed to create reservation');
       }
 
-      setLoading(false);
     } catch (err) {
-      console.error('Error creating reservation:', err);
-      setError(err.response?.data?.error || 'Failed to create reservation');
+      console.error('❌ Error creating reservation:', err);
+      console.error('Error details:', err.response?.data);
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.message || 
+                          'Failed to create reservation. Please try again.';
+      setError(errorMessage);
+    } finally {
       setLoading(false);
     }
+  };
+
+  const formatDateDisplay = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   };
 
   return (
@@ -161,15 +229,14 @@ const ReservationPage = () => {
       </div>
 
       <div className="container">
-        {/* Progress Steps */}
         <div className="progress-steps">
           <div className={`step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}>
-            <div className="step-number">1</div>
+            <div className="step-number">{step > 1 ? '✓' : '1'}</div>
             <div className="step-label">Date & Time</div>
           </div>
           <div className="step-line"></div>
           <div className={`step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>
-            <div className="step-number">2</div>
+            <div className="step-number">{step > 2 ? '✓' : '2'}</div>
             <div className="step-label">Select Table</div>
           </div>
           <div className="step-line"></div>
@@ -187,7 +254,6 @@ const ReservationPage = () => {
           <div className="success-message">✅ {success}</div>
         )}
 
-        {/* Step 1: Date, Time, People */}
         {step === 1 && (
           <div className="reservation-card">
             <h2>Select Date, Time & Party Size</h2>
@@ -199,8 +265,10 @@ const ReservationPage = () => {
                 onChange={(e) => setNumPeople(parseInt(e.target.value))}
                 className="form-control"
               >
-                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(num => (
-                  <option key={num} value={num}>{num} {num === 1 ? 'Person' : 'People'}</option>
+                {Array.from({length: 20}, (_, i) => i + 1).map(num => (
+                  <option key={num} value={num}>
+                    {num} {num === 1 ? 'Person' : 'People'}
+                  </option>
                 ))}
               </select>
             </div>
@@ -217,20 +285,28 @@ const ReservationPage = () => {
               />
             </div>
 
-            {selectedDate && availableTimeSlots.length > 0 && (
+            {selectedDate && (
               <div className="form-group">
                 <label>Select Time *</label>
-                <div className="time-slots">
-                  {availableTimeSlots.map(time => (
-                    <button
-                      key={time}
-                      className={`time-slot ${selectedTime === time ? 'selected' : ''}`}
-                      onClick={() => handleTimeChange(time)}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
+                {loading ? (
+                  <div className="loading">Loading available times...</div>
+                ) : availableTimeSlots.length === 0 && !error ? (
+                  <p style={{color: '#e74c3c', textAlign: 'center', padding: '1rem'}}>
+                    No time slots available for this date
+                  </p>
+                ) : (
+                  <div className="time-slots">
+                    {availableTimeSlots.map(time => (
+                      <button
+                        key={time}
+                        className={`time-slot ${selectedTime === time ? 'selected' : ''}`}
+                        onClick={() => handleTimeChange(time)}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -238,7 +314,7 @@ const ReservationPage = () => {
               <button 
                 className="btn-next" 
                 onClick={handleNextStep}
-                disabled={!selectedDate || !selectedTime}
+                disabled={!selectedDate || !selectedTime || loading}
               >
                 Next: Select Table →
               </button>
@@ -246,12 +322,14 @@ const ReservationPage = () => {
           </div>
         )}
 
-        {/* Step 2: Select Table */}
         {step === 2 && (
           <div className="reservation-card">
             <h2>Select Your Table</h2>
             <p className="step-info">
-              📅 {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {selectedTime}
+              📅 {formatDateDisplay(selectedDate)} at {selectedTime}
+            </p>
+            <p className="step-info">
+              👥 Party of {numPeople}
             </p>
 
             {loading ? (
@@ -259,7 +337,7 @@ const ReservationPage = () => {
             ) : availableTables.length === 0 ? (
               <div className="no-tables">
                 <p>😔 No tables available at this time</p>
-                <p>Please select a different time</p>
+                <p>Please go back and select a different time</p>
               </div>
             ) : (
               <div className="tables-grid">
@@ -271,7 +349,7 @@ const ReservationPage = () => {
                   >
                     <div className="table-icon">🍽️</div>
                     <div className="table-number">Table {tableNum}</div>
-                    <div className="table-capacity">2-4 seats</div>
+                    <div className="table-capacity">Seats 2-4</div>
                   </div>
                 ))}
               </div>
@@ -292,7 +370,6 @@ const ReservationPage = () => {
           </div>
         )}
 
-        {/* Step 3: Confirm */}
         {step === 3 && (
           <div className="reservation-card">
             <h2>Confirm Your Reservation</h2>
@@ -310,9 +387,7 @@ const ReservationPage = () => {
                 <span className="detail-icon">📅</span>
                 <div>
                   <div className="detail-label">Date</div>
-                  <div className="detail-value">
-                    {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                  </div>
+                  <div className="detail-value">{formatDateDisplay(selectedDate)}</div>
                 </div>
               </div>
 
@@ -352,10 +427,11 @@ const ReservationPage = () => {
             <div className="confirmation-notice">
               <p>📧 A confirmation email will be sent to <strong>{user?.email}</strong></p>
               <p>⏰ Please arrive 10 minutes before your reservation time</p>
+              <p>🍽️ Your table will be held for 15 minutes after the reservation time</p>
             </div>
 
             <div className="button-group">
-              <button className="btn-back" onClick={handlePrevStep}>
+              <button className="btn-back" onClick={handlePrevStep} disabled={loading}>
                 ← Back
               </button>
               <button 

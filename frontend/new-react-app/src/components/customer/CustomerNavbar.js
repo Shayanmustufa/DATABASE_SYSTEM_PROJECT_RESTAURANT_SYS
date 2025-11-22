@@ -1,3 +1,4 @@
+// frontend/new-react-app/src/components/customer/CustomerNavbar.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -18,11 +19,14 @@ const CustomerNavbar = () => {
         <ul className="nav-menu">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/menu">Menu</Link></li>
-          <li><Link to="/reservations">Reservations</Link></li>
-          <li><Link to="/challenges">Challenges</Link></li>
+          <li><Link to="/reservations">Make Reservation</Link></li>
           {isAuthenticated && (
-            <li><Link to="/my-orders">My Orders</Link></li>
+            <>
+              <li><Link to="/my-reservations">My Reservations</Link></li>
+              <li><Link to="/my-orders">My Orders</Link></li>
+            </>
           )}
+          <li><Link to="/challenges">Challenges</Link></li>
         </ul>
 
         <div className="nav-actions">
