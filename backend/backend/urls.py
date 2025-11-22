@@ -1,4 +1,6 @@
 # backend/backend/urls.py
+# COMPLETE CORRECTED FILE - COPY AND REPLACE
+
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
@@ -15,7 +17,6 @@ from api.reservation_views import (
     get_available_time_slots
 )
 
-# Simple home view
 def home(request):
     return JsonResponse({
         'message': 'Welcome to Restaurant Management System API',
@@ -42,9 +43,6 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     
-    # API endpoints (from api/urls.py - all the viewsets)
-    path('api/', include('api.urls')),
-    
     # JWT Authentication endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -53,10 +51,13 @@ urlpatterns = [
     path('api/register/', register_customer, name='register'),
     path('api/me/', get_current_user, name='current_user'),
     
-    # Reservation endpoints
+    # ⭐ RESERVATION ENDPOINTS - MUST BE BEFORE api/ include
+    path('api/reservations/time-slots/', get_available_time_slots, name='time_slots'),
+    path('api/reservations/available-tables/', get_available_tables, name='available_tables'),
     path('api/reservations/create/', create_reservation, name='create_reservation'),
     path('api/reservations/my/', get_my_reservations, name='my_reservations'),
     path('api/reservations/<int:reservation_id>/cancel/', cancel_reservation, name='cancel_reservation'),
-    path('api/reservations/available-tables/', get_available_tables, name='available_tables'),
-    path('api/reservations/time-slots/', get_available_time_slots, name='time_slots'),
+    
+    # ⭐ Generic API routes (AFTER custom endpoints)
+    path('api/', include('api.urls')),
 ]

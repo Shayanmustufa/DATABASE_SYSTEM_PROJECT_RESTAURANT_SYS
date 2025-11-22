@@ -9,6 +9,11 @@ from .models import Reservation, ReservationCustomer, Customer
 from .serializers import ReservationSerializer
 from .email_utils import send_reservation_confirmation_email, send_reservation_cancellation_email
 import logging
+# backend/api/reservation_views.py
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.core.exceptions import ValidationError
+from .models import Reservation, ReservationCustomer, Customer  # ✅ Correct models
 
 logger = logging.getLogger(__name__)
 
