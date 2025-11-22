@@ -1,4 +1,4 @@
-/ FILE 1: Fix App.js
+
 // Location: frontend/new-react-app/src/App.js
 // ========================================
 
