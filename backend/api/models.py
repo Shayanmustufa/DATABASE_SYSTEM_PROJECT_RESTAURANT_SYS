@@ -1,7 +1,7 @@
 from django.db import models
-
-# Create your models here.
 from django.db import models
+from django.contrib.auth.hashers import make_password
+
 
 # -------------------------
 # 1. CUSTOMER
@@ -33,15 +33,26 @@ class Branch(models.Model):
 
 # -------------------------
 # 3. STAFF
-# -------------------------
 class Staff(models.Model):
     StaffID = models.AutoField(primary_key=True)
     Name = models.CharField(max_length=100)
     Role = models.CharField(max_length=50)
     Salary = models.DecimalField(max_digits=10, decimal_places=2)
+    Email = models.EmailField(unique=True)  # ✅ UNIQUE EMAIL
+    Password = models.CharField(max_length=255)  # ✅ HASHED PASSWORD
+
+    def set_password(self, raw_password):
+        """Hash password before saving"""
+        self.Password = make_password(raw_password)
+
+    def save(self, *args, **kwargs):
+        # Only hash if password is not already hashed
+        if self.Password and not self.Password.startswith('pbkdf2_sha256$'):
+            self.set_password(self.Password)
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.Name
+        return f"{self.Name} ({self.Email})"
 
 
 # -------------------------
@@ -261,15 +272,9 @@ class OrderCustomer(models.Model):
 # -------------------------
 # 21. ORDER STAFF (Composite Key)
 # -------------------------
-# backend/api/models.py - Add to Staff model
+class OrderStaff(models.Model):
+    OrderID = models.ForeignKey(Order, on_delete=models.CASCADE)
+    StaffID = models.ForeignKey(Staff, on_delete=models.CASCADE)
 
-class Staff(models.Model):
-    StaffID = models.AutoField(primary_key=True)
-    Name = models.CharField(max_length=100)
-    Role = models.CharField(max_length=50)
-    Salary = models.DecimalField(max_digits=10, decimal_places=2)
-    Email = models.EmailField(unique=True, default='staff@example.com')  # ADD THIS
-    Password = models.CharField(max_length=255, default='hashed_password')  # ADD THIS
-    
-    def __str__(self):
-        return self.Name
+    class Meta:
+        unique_together = ('OrderID', 'StaffID')
